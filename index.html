@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14110e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Health Log">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Health Log</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #14110e;
+      --surface: #1d1814;
+      --border: #2e2620;
+      --text: #f0e6d6;
+      --text-muted: #8a7c6c;
+      --text-subtle: #5a4f43;
+      --accent: #d4956b;
+      --accent-soft: rgba(212, 149, 107, 0.12);
+      --success: #8aa867;
+      --error: #c87560;
+
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-ui: 'Public Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px 18px 140px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 30px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    h1 em { font-style: italic; color: var(--accent); }
+
+    .now {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      text-align: right;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      transition: border-color 200ms ease;
+    }
+    .card.active { border-color: rgba(212, 149, 107, 0.4); }
+
+    .card h2 {
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .card.active h2 .dot { opacity: 1; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .row:last-child { margin-bottom: 0; }
+    .row.single { grid-template-columns: 1fr; }
+
+    label.field { display: block; }
+    label.field .label-text {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+    label.field .unit {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-subtle);
+    }
+    label.field input,
+    label.field textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 18px;
+      padding: 6px 0;
+      outline: none;
+      transition: border-color 150ms ease;
+      appearance: none;
+      border-radius: 0;
+    }
+    label.field textarea {
+      font-family: var(--font-ui);
+      font-size: 15px;
+      resize: vertical;
+      min-height: 36px;
+      line-height: 1.4;
+    }
+    label.field input:focus,
+    label.field textarea:focus {
+      border-bottom-color: var(--accent);
+    }
+    label.field input::placeholder,
+    label.field textarea::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .full { margin-top: 12px; }
+
+    .computed {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .computed .value {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 16px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to bottom, transparent, var(--bg) 35%);
+      padding: 40px 18px calc(20px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 50;
+    }
+    footer button {
+      pointer-events: auto;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 16px 32px;
+      border-radius: 100px;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      transition: transform 100ms ease, opacity 150ms ease;
+    }
+    footer button:active { transform: scale(0.97); }
+    footer button:disabled { opacity: 0.5; cursor: default; }
+
+    .toast {
+      position: fixed;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 22px;
+      border-radius: 100px;
+      font-size: 13px;
+      max-width: calc(100vw - 40px);
+      opacity: 0;
+      transition: transform 300ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 200ms ease;
+      pointer-events: none;
+      z-index: 100;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+      white-space: normal;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error   { border-color: var(--error);   color: var(--error); }
+
+    @media (max-width: 360px) {
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Health <em>log</em></h1>
+      <div class="now" id="now"></div>
+    </header>
+
+    <main>
+      <!-- Glucose / Ketones -->
+      <section class="card" data-section="glucose">
+        <h2>Glucose / Ketones <span class="dot"></span></h2>
+        <div class="row">
+          <label class="field">
+            <span class="label-text">Ketones <span class="unit">mmol/L</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="glucose_ketones">
+          </label>
+          <label class="field">
+            <span class="label-text">Glucose <span class="unit">mmol/L</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="glucose_glucose">
+          </label>
+        </div>
+        <div class="row single">
+          <label class="field">
+            <span class="label-text">HCT <span class="unit">%</span></span>
+            <input type="text" inputmode="numeric" autocomplete="off" id="glucose_hct">
+          </label>
+        </div>
+        <label class="field full">
+          <span class="label-text">Note</span>
+          <textarea id="glucose_note" rows="2" autocomplete="off"></textarea>
+        </label>
+      </section>
+
+      <!-- Weight -->
+      <section class="card" data-section="weight">
+        <h2>Weight <span class="dot"></span></h2>
+        <div class="row single">
+          <label class="field">
+            <span class="label-text">Weight <span class="unit">kg</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="weight_weight">
+          </label>
+        </div>
+        <label class="field full">
+          <span class="label-text">Note</span>
+          <textarea id="weight_note" rows="1" autocomplete="off"></textarea>
+        </label>
+      </section>
+
+      <!-- Blood Pressure -->
+      <section class="card" data-section="bp">
+        <h2>Blood Pressure <span class="dot"></span></h2>
+        <div class="row">
+          <label class="field">
+            <span class="label-text">Systolic <span class="unit">mmHg</span></span>
+            <input type="text" inputmode="numeric" autocomplete="off" id="bp_systolic">
+          </label>
+          <label class="field">
+            <span class="label-text">Diastolic <span class="unit">mmHg</span></span>
+            <input type="text" inputmode="numeric" autocomplete="off" id="bp_diastolic">
+          </label>
+        </div>
+        <label class="field full">
+          <span class="label-text">Note</span>
+          <textarea id="bp_note" rows="1" autocomplete="off"></textarea>
+        </label>
+      </section>
+
+      <!-- Body Measurements -->
+      <section class="card" data-section="body">
+        <h2>Body Measurements <span class="dot"></span></h2>
+        <div class="row">
+          <label class="field">
+            <span class="label-text">Waist <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_waist">
+          </label>
+          <label class="field">
+            <span class="label-text">Neck <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_neck">
+          </label>
+        </div>
+        <div class="row">
+          <label class="field">
+            <span class="label-text">Hips <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_hips">
+          </label>
+          <label class="field">
+            <span class="label-text">Chest <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_chest">
+          </label>
+        </div>
+        <div class="row">
+          <label class="field">
+            <span class="label-text">Arm <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_arm">
+          </label>
+          <label class="field">
+            <span class="label-text">Thigh <span class="unit">cm</span></span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="body_thigh">
+          </label>
+        </div>
+        <div class="computed">
+          <span>Body fat (Navy)</span>
+          <span class="value" id="bodyFatValue">—</span>
+        </div>
+        <label class="field full">
+          <span class="label-text">Note</span>
+          <textarea id="body_note" rows="1" autocomplete="off"></textarea>
+        </label>
+      </section>
+
+      <!-- Standalone Note -->
+      <section class="card" data-section="notes">
+        <h2>Food Log / Note <span class="dot"></span></h2>
+        <p class="hint">Standalone notes that aren't tied to a reading above.</p>
+        <label class="field">
+          <textarea id="standalone_note" rows="3" autocomplete="off"
+                    placeholder="e.g. 'Had pork belly and salad at 18:30'"></textarea>
+        </label>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <button id="submit">Save</button>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Config ───────────────────────────────────────────────
+    const GAS_URL   = '__GAS_URL__';
+    const API_TOKEN = '051868b83584fea4a62c4ffa01f8a1e0';
+    const HEIGHT_CM = 177;
+
+    // ── Service worker ───────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(r => console.log('[SW] Registered:', r.scope))
+          .catch(e => console.warn('[SW] Failed:', e));
+      });
+    }
+
+    // ── Current time display ─────────────────────────────────
+    function updateNow() {
+      const now = new Date();
+      document.getElementById('now').textContent =
+        now.toLocaleString('en-GB', {
+          weekday: 'short', day: 'numeric', month: 'short',
+          hour: '2-digit', minute: '2-digit', hour12: false
+        }).replace(',', '');
+    }
+    updateNow();
+    setInterval(updateNow, 30000);
+
+    // ── Body fat live calculation ────────────────────────────
+    function navyBodyFatMale(waist, neck, height) {
+      if (!waist || !neck || waist <= neck) return null;
+      const denom = 1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height);
+      if (denom <= 0) return null;
+      return Math.round((495 / denom - 450) * 10) / 10;
+    }
+    function updateBodyFat() {
+      const waist = parseFloat(document.getElementById('body_waist').value);
+      const neck  = parseFloat(document.getElementById('body_neck').value);
+      const out   = document.getElementById('bodyFatValue');
+      if (isNaN(waist) || isNaN(neck)) { out.textContent = '—'; return; }
+      const bf = navyBodyFatMale(waist, neck, HEIGHT_CM);
+      out.textContent = bf !== null ? bf.toFixed(1) + '%' : '—';
+    }
+    document.getElementById('body_waist').addEventListener('input', updateBodyFat);
+    document.getElementById('body_neck').addEventListener('input',  updateBodyFat);
+
+    // ── Section active indicator ─────────────────────────────
+    document.querySelectorAll('section.card').forEach(card => {
+      const inputs = card.querySelectorAll('input, textarea');
+      inputs.forEach(inp => {
+        const handler = () => {
+          card.classList.toggle('active', Array.from(inputs).some(i => i.value.trim() !== ''));
+        };
+        inp.addEventListener('input', handler);
+        inp.addEventListener('change', handler);
+      });
+    });
+
+    // ── Form collection ──────────────────────────────────────
+    function collectPayload() {
+      const v = id => document.getElementById(id).value.trim();
+      return {
+        glucose: { ketones: v('glucose_ketones'), glucose: v('glucose_glucose'), hct: v('glucose_hct'), note: v('glucose_note') },
+        weight:  { weight: v('weight_weight'), note: v('weight_note') },
+        bp:      { systolic: v('bp_systolic'), diastolic: v('bp_diastolic'), note: v('bp_note') },
+        body:    { waist: v('body_waist'), neck: v('body_neck'), hips: v('body_hips'), chest: v('body_chest'), arm: v('body_arm'), thigh: v('body_thigh'), note: v('body_note') },
+        standaloneNote: v('standalone_note')
+      };
+    }
+
+    // ── Toast ────────────────────────────────────────────────
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    function showToast(message, type) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = 'toast show ' + (type || '');
+      toastTimer = setTimeout(() => { toast.className = 'toast'; }, 3800);
+    }
+
+    function resetForm() {
+      document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+      document.querySelectorAll('section.card').forEach(s => s.classList.remove('active'));
+      updateBodyFat();
+    }
+
+    // ── Submit ───────────────────────────────────────────────
+    const submitBtn = document.getElementById('submit');
+    submitBtn.addEventListener('click', async () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+
+      const payload = { token: API_TOKEN, ...collectPayload() };
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save';
+        if (result.ok) {
+          showToast(result.message, 'success');
+          resetForm();
+          if (navigator.vibrate) navigator.vibrate(10);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save';
+        showToast('Error: ' + err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>
