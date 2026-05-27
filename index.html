@@ -261,6 +261,33 @@
     .toast.success { border-color: var(--success); color: var(--success); }
     .toast.error   { border-color: var(--error);   color: var(--error); }
 
+    /* Install banner */
+    .install-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--accent-soft);
+      border: 1px solid rgba(212,149,107,0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+    .install-bar.visible { display: flex; }
+    .install-bar span { font-size: 13px; color: var(--text-muted); flex: 1; }
+    .install-bar button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
     @media (max-width: 360px) {
       .row { grid-template-columns: 1fr; }
     }
@@ -272,6 +299,11 @@
       <h1>Health <em>log</em></h1>
       <div class="now" id="now"></div>
     </header>
+
+    <div class="install-bar" id="installBar">
+      <span>Add Health Log to your home screen</span>
+      <button id="installBtn">Install</button>
+    </div>
 
     <main>
       <!-- Glucose / Ketones -->
@@ -399,6 +431,24 @@
     const GAS_URL   = 'https://script.google.com/macros/s/AKfycbzzdwvyiPiALu-FMisNNtUJeF4tFmvJ2OllBGrpKrUI3859AZdLjjrr563YeQg5A6tc/exec';
     const API_TOKEN = '051868b83584fea4a62c4ffa01f8a1e0';
     const HEIGHT_CM = 177;
+
+    // ── PWA install prompt ───────────────────────────────────
+    let installPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      installPrompt = e;
+      document.getElementById('installBar').classList.add('visible');
+    });
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') document.getElementById('installBar').classList.remove('visible');
+      installPrompt = null;
+    });
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('installBar').classList.remove('visible');
+    });
 
     // ── Service worker ───────────────────────────────────────
     if ('serviceWorker' in navigator) {
