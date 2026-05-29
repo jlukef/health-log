@@ -543,7 +543,13 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
-        const result = await res.json();
+        const raw = await res.text();
+        let result;
+        try {
+          result = JSON.parse(raw);
+        } catch {
+          throw new Error(`GAS returned non-JSON (HTTP ${res.status}): ${raw.slice(0, 200)}`);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = 'Save';
         if (result.ok) {
