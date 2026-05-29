@@ -204,6 +204,17 @@
       line-height: 1.4;
     }
 
+    .tip {
+      display: none;
+      font-size: 11px;
+      color: var(--accent);
+      font-style: italic;
+      margin-top: 5px;
+      line-height: 1.35;
+      opacity: 0.8;
+    }
+    input:focus ~ .tip { display: block; }
+
     footer {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -372,30 +383,36 @@
           <label class="field">
             <span class="label-text">Waist <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_waist">
+            <span class="tip">At navel height — standing relaxed, exhale gently</span>
           </label>
           <label class="field">
             <span class="label-text">Neck <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_neck">
+            <span class="tip">Just below the Adam's apple, tape angled slightly down at front</span>
           </label>
         </div>
         <div class="row">
           <label class="field">
             <span class="label-text">Hips <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_hips">
+            <span class="tip">Widest point of hips and buttocks</span>
           </label>
           <label class="field">
             <span class="label-text">Chest <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_chest">
+            <span class="tip">Around the fullest part of the chest, arms relaxed at sides</span>
           </label>
         </div>
         <div class="row">
           <label class="field">
             <span class="label-text">Arm <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_arm">
+            <span class="tip">Midpoint of upper arm between shoulder and elbow, arm hanging relaxed</span>
           </label>
           <label class="field">
             <span class="label-text">Thigh <span class="unit">cm</span></span>
             <input type="text" inputmode="decimal" autocomplete="off" id="body_thigh">
+            <span class="tip">Widest part of upper thigh, just below the crease</span>
           </label>
         </div>
         <div class="computed">
